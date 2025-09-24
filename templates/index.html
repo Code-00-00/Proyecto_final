@@ -1,0 +1,385 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sabores Unidos | Plataforma Gastronómica</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="light-mode">
+    <!-- Mensajes flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div style="position: fixed; top: 20px; right: 20px; z-index: 2000;">
+          {% for category, message in messages %}
+            <div style="
+              padding: 1rem 1.5rem;
+              margin-bottom: 0.5rem;
+              border-radius: 0.5rem;
+              color: white;
+              font-weight: 500;
+              box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+              {% if category == 'error' %}background-color: #d32f2f;
+              {% elif category == 'success' %}background-color: #4caf50;
+              {% else %}background-color: #1976d2;
+              {% endif %}
+            ">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+        <!-- Auto-ocultar mensajes después de 3 segundos -->
+        <script>
+          setTimeout(() => {
+            const messages = document.querySelector('[style*="position: fixed"]');
+            if (messages) {
+              messages.style.opacity = '0';
+              setTimeout(() => messages.remove(), 300);
+            }
+          }, 3000);
+        </script>
+      {% endif %}
+    {% endwith %}
+
+  <!-- Header -->
+  <header>
+    <a href="{{ url_for('index') }}" class="logo">
+      <span class="logo-icon">SU</span>
+      <span>Sabores Unidos</span>
+    </a>
+    <nav>
+      <ul>
+        <li><a href="{{ url_for('index') }}" class="active">Inicio</a></li>
+        <li><a href="#">Restaurantes</a></li>
+        <li><a href="#">Sobre Nosotros</a></li>
+        <li><a href="#">Contacto</a></li>
+      </ul>
+    </nav>
+    <div class="auth-buttons">
+      <button class="theme-toggle">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+      </button>
+      
+      {% if user_logged_in %}
+        <a href="{{ url_for('profile') }}" class="btn btn-outline" style="display: flex; align-items: center; gap: 0.5rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          {{ user_name }}
+        </a>
+      {% else %}
+        <button class="btn btn-outline" onclick="openLoginModal()">Iniciar sesión</button>
+        <button class="btn btn-primary" onclick="openRegisterModal()">Registrarse</button>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>Descubre los mejores sabores en un solo clic</h1>
+    <p>Una experiencia gastronómica unificada para todos los paladares. Reserva, pide online o come en el local con solo unos clics.</p>
+    <div class="search-container">
+      <input type="text" id="searchInput" class="search-bar" placeholder="Buscar restaurantes, cocinas, platos...">
+      <button class="search-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        Buscar
+      </button>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <div class="container">
+    <!-- Filtros -->
+    <div class="filters">
+      <button class="filter-btn active">Todos</button>
+      <button class="filter-btn">Italiana</button>
+      <button class="filter-btn">Japonesa</button>
+      <button class="filter-btn">Mexicana</button>
+      <button class="filter-btn">Vegetariana</button>
+      <button class="filter-btn">Francesa</button>
+    </div>
+
+    <!-- Restaurantes -->
+    <h2 class="section-title">Restaurantes Destacados</h2>
+    <div class="restaurants-grid">
+      <div class="restaurant-card" onclick="openRestaurantDetail(1)">
+        <div class="restaurant-header">
+          <img src="{{ url_for('static', filename='images/italiano.jpg') }}" alt="Milano Italiano">
+          <div class="rating">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            4.8
+          </div>
+        </div>
+        <div class="restaurant-body">
+          <div class="restaurant-name">Milano Italiano</div>
+          <div class="cuisine-tags">
+            <span class="cuisine-tag">Italiana</span>
+          </div>
+          <div class="restaurant-info">
+            <span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              1.2 km
+            </span>
+            <span>$$</span>
+          </div>
+          <p style="margin: 0.8rem 0; color: #666; font-size: 0.9rem;">Auténtica cocina italiana con ingredientes traídos de Italia.</p>
+          <div class="restaurant-actions">
+            <div style="display: flex; gap: 0.5rem;">
+              <span style="color: var(--primary); font-size: 0.8rem;">🚚 Delivery</span>
+              <span style="color: var(--success); font-size: 0.8rem;">📦 Pickup</span>
+            </div>
+            <div class="heart" onclick="toggleFavorite(1, event)">♥</div>
+          </div>
+        </div>
+      </div>
+      <div class="restaurant-card" onclick="openRestaurantDetail(2)">
+        <div class="restaurant-header">
+          <img src="{{ url_for('static', filename='images/sakura.jpg') }}" alt="Sakura Sushi">
+          <div class="rating">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            4.9
+          </div>
+        </div>
+        <div class="restaurant-body">
+          <div class="restaurant-name">Sakura Sushi</div>
+          <div class="cuisine-tags">
+            <span class="cuisine-tag">Japonesa</span>
+          </div>
+          <div class="restaurant-info">
+            <span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              0.8 km
+            </span>
+            <span>$$$</span>
+          </div>
+          <p style="margin: 0.8rem 0; color: #666; font-size: 0.9rem;">Sushi fresco y auténtico con pescado del mercado central.</p>
+          <div class="restaurant-actions">
+            <div style="display: flex; gap: 0.5rem;">
+              <span style="color: var(--primary); font-size: 0.8rem;">🚚 Delivery</span>
+              <span style="color: var(--success); font-size: 0.8rem;">📦 Pickup</span>
+            </div>
+            <div class="heart" onclick="toggleFavorite(2, event)">♥</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cómo funciona -->
+    <h2 class="section-title">Cómo Funciona</h2>
+    <div class="how-it-works">
+      <div class="step">
+        <div class="step-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+        <h3>Navega</h3>
+        <p>Descubre restaurantes cerca de ti con filtros inteligentes y recomendaciones personalizadas</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 18.33l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+        </div>
+        <h3>Elige</h3>
+        <p>Selecciona tu lugar favorito, revisa el menú completo y lee reseñas de otros usuarios</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+        </div>
+        <h3>Reserva o Pide</h3>
+        <p>Haz tu reserva en segundos o pide online para delivery, pickup o comer en el local</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+        </div>
+        <h3>Disfruta</h3>
+        <p>Vive una experiencia gastronómica única con recordatorios, promociones y recompensas</p>
+      </div>
+    </div>
+
+    <!-- Testimonios -->
+    <h2 class="section-title">Lo que dicen nuestros usuarios</h2>
+    <div class="testimonials">
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <p class="quote">"He encontrado restaurantes increíbles que nunca habría descubierto por mi cuenta. La app me ha cambiado la vida gastronómica."</p>
+        <div class="author">
+          <div class="author-img">AM</div>
+          <span>Ana Martínez</span>
+        </div>
+      </div>
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <p class="quote">"La reserva es super fácil y los recordatorios por SMS son muy útiles. Además, el sistema de recompensas es genial."</p>
+        <div class="author">
+          <div class="author-img">CR</div>
+          <span>Carlos Rodríguez</span>
+        </div>
+      </div>
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <p class="quote">"Amo poder ver todos los menús antes de decidir dónde comer. La búsqueda por ingredientes es una función que adoro."</p>
+        <div class="author">
+          <div class="author-img">LP</div>
+          <span>Laura Pérez</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Suscripción -->
+    <div class="subscribe-section">
+      <h2 class="subscribe-title">Suscríbete y recibe un 10% de descuento</h2>
+      <p class="subscribe-desc">Únete a nuestra comunidad y sé el primero en conocer nuevas aperturas y promociones exclusivas. Además, obtén acceso a eventos gastronómicos privados.</p>
+      <div class="email-form">
+        <input type="email" class="email-input" placeholder="Tu correo electrónico" />
+        <button class="btn btn-primary">Suscribirse</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('loginModal')">×</span>
+      <h2>Bienvenido a Sabores Unidos</h2>
+      <p>Inicia sesión para reservar, pedir y guardar tus lugares favoritos</p>
+      <form method="POST" action="{{ url_for('login') }}">
+        <div class="form-group">
+          <label class="form-label">Correo electrónico</label>
+          <input type="email" name="email" class="form-input" placeholder="tu@email.com" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contraseña</label>
+          <input type="password" name="password" class="form-input" placeholder="••••••••" required />
+        </div>
+        <button class="btn btn-primary" type="submit">Iniciar sesión</button>
+        <div style="margin-top: 1.5rem; text-align: center;">
+          <p>o inicia con</p>
+          <div style="display: flex; gap: 1rem; justify-content: center;">
+            <button type="button" class="btn btn-outline">Google</button>
+            <button type="button" class="btn btn-outline">Facebook</button>
+          </div>
+          <p style="margin-top: 1.5rem;">
+            ¿No tienes cuenta? 
+            <span style="color: var(--primary); cursor: pointer; font-weight: 600;" onclick="openRegisterModal()">Regístrate</span>
+          </p>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Register Modal -->
+  <div id="registerModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('registerModal')">×</span>
+      <h2>Crea tu cuenta</h2>
+      <p>Únete a nuestra comunidad gastronómica</p>
+      <form method="POST" action="{{ url_for('register') }}">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nombre</label>
+            <input type="text" name="nombre" class="form-input" placeholder="Nombre" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Apellido</label>
+            <input type="text" name="apellido" class="form-input" placeholder="Apellido" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Correo electrónico</label>
+          <input type="email" name="email" class="form-input" placeholder="tu@email.com" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contraseña</label>
+          <input type="password" name="password" class="form-input" placeholder="••••••••" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Teléfono</label>
+          <input type="tel" name="telefono" class="form-input" placeholder="+56 9 1234 5678" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dirección</label>
+          <input type="text" name="direccion" class="form-input" placeholder="Calle, número, comuna" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ciudad</label>
+          <input type="text" name="ciudad" class="form-input" placeholder="Ciudad" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Código Postal</label>
+          <input type="text" name="codigo_postal" class="form-input" placeholder="Código postal" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Género</label>
+          <select name="genero" class="form-input">
+            <option value="">Selecciona una opción</option>
+            <option value="masculino">Masculino</option>
+            <option value="femenino">Femenino</option>
+            <option value="otro">Otro</option>
+            <option value="no_especifica">Prefiero no especificar</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha de Nacimiento</label>
+          <input type="date" name="fecha_nacimiento" class="form-input" />
+        </div>
+        <button class="btn btn-primary" type="submit">Crear cuenta</button>
+        <p style="margin-top: 1.5rem; text-align: center;">
+          ¿Ya tienes cuenta? 
+          <span style="color: var(--primary); cursor: pointer; font-weight: 600;" onclick="openLoginModal()">Inicia sesión</span>
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Restaurant Detail Modal -->
+  <div id="restaurantModal" class="modal">
+    <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+      <span class="close" onclick="closeModal('restaurantModal')">×</span>
+      <div id="restaurantDetailContent">
+        <!-- Contenido dinámico -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sabores Unidos{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="light-mode">
+    <!-- Header -->
+    <header>
+        <a href="{{ url_for('index') }}" class="logo">
+            <span class="logo-icon">SU</span>
+            <span>Sabores Unidos</span>
+        </a>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">Inicio</a></li>
+                <li><a href="#">Restaurantes</a></li>
+                <li><a href="#">Sobre Nosotros</a></li>
+                <li><a href="#">Contacto</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons">
+            <button class="theme-toggle" id="themeToggle">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+            </button>
+            
+            {% if user_logged_in %}
+                <a href="{{ url_for('profile') }}" class="btn btn-outline" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    {{ user_name }}
+                </a>
+                <a href="{{ url_for('logout') }}" class="btn btn-primary">Cerrar sesión</a>
+            {% else %}
+                <button class="btn btn-outline" onclick="openLoginModal()">Iniciar sesión</button>
+                <button class="btn btn-primary" onclick="openRegisterModal()">Registrarse</button>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div style="position: fixed; top: 20px; right: 20px; z-index: 2000;">
+          {% for category, message in messages %}
+            <div style="
+              padding: 1rem 1.5rem;
+              margin-bottom: 0.5rem;
+              border-radius: 0.5rem;
+              color: white;
+              font-weight: 500;
+              box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+              {% if category == 'error' %}background-color: #d32f2f;
+              {% elif category == 'success' %}background-color: #4caf50;
+              {% else %}background-color: #1976d2;
+              {% endif %}
+            ">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+        <script>
+          setTimeout(() => {
+            const messages = document.querySelector('[style*="position: fixed"]');
+            if (messages) {
+              messages.style.opacity = '0';
+              setTimeout(() => messages.remove(), 300);
+            }
+          }, 3000);
+        </script>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Contenido Principal -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Modales -->
+    {% include 'modals/auth_modals.html' ignore missing %}
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
